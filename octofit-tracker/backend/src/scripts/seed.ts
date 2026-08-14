@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { Activity, LeaderboardEntry, Team, User, Workout } from '../models';
 
 const connectionString = process.env.MONGODB_URI || 'mongodb://localhost:27017/octofit_db';
 
@@ -8,11 +9,198 @@ const connectionString = process.env.MONGODB_URI || 'mongodb://localhost:27017/o
 async function seedDatabase() {
   try {
     await mongoose.connect(connectionString);
-
     console.log('Connected to octofit_db');
 
-    // TODO: Add seed data for users, teams, activities, leaderboard, and workouts
+    await Promise.all([
+      User.deleteMany({}),
+      Team.deleteMany({}),
+      Activity.deleteMany({}),
+      LeaderboardEntry.deleteMany({}),
+      Workout.deleteMany({})
+    ]);
 
+    const users = await User.insertMany([
+      {
+        name: 'Ava Thompson',
+        email: 'ava.thompson@example.com',
+        age: 29,
+        fitnessLevel: 'advanced',
+        city: 'Seattle',
+        bio: 'Marathon runner focused on endurance and recovery.'
+      },
+      {
+        name: 'Lucas Chen',
+        email: 'lucas.chen@example.com',
+        age: 34,
+        fitnessLevel: 'intermediate',
+        city: 'Austin',
+        bio: 'Loves cycling and team challenges.'
+      },
+      {
+        name: 'Maya Patel',
+        email: 'maya.patel@example.com',
+        age: 26,
+        fitnessLevel: 'beginner',
+        city: 'Denver',
+        bio: 'Building consistency with strength and walking workouts.'
+      },
+      {
+        name: 'Noah Garcia',
+        email: 'noah.garcia@example.com',
+        age: 31,
+        fitnessLevel: 'advanced',
+        city: 'Boston',
+        bio: 'Strength coach and weekend hiker.'
+      }
+    ]);
+
+    const teams = await Team.insertMany([
+      {
+        name: 'River Runners',
+        sport: 'Running',
+        city: 'Seattle',
+        motto: 'Move together, finish stronger.',
+        members: [users[0]._id, users[2]._id]
+      },
+      {
+        name: 'Peak Cyclists',
+        sport: 'Cycling',
+        city: 'Austin',
+        motto: 'Pedal hard, recover smarter.',
+        members: [users[1]._id, users[3]._id]
+      }
+    ]);
+
+    const userTeams = [
+      { userId: users[0]._id, teamId: teams[0]._id },
+      { userId: users[1]._id, teamId: teams[1]._id },
+      { userId: users[2]._id, teamId: teams[0]._id },
+      { userId: users[3]._id, teamId: teams[1]._id }
+    ];
+
+    const teamByUserId = new Map<string, mongoose.Types.ObjectId>();
+    userTeams.forEach(({ userId, teamId }) => {
+      teamByUserId.set(String(userId), teamId as mongoose.Types.ObjectId);
+    });
+
+    await Promise.all(
+      userTeams.map(({ userId, teamId }) =>
+        User.findByIdAndUpdate(userId, { teamId }, { new: true, runValidators: true })
+      )
+    );
+
+    const updatedUsers = await User.find().lean();
+
+    const activities = await Activity.insertMany([
+      {
+        userId: updatedUsers[0]._id,
+        teamId: teamByUserId.get(String(updatedUsers[0]._id)),
+        type: 'run',
+        durationMinutes: 42,
+        caloriesBurned: 520,
+        distanceKm: 7.8,
+        date: new Date('2026-08-10T06:30:00Z'),
+        notes: 'Tempo run with a steady pace through the park.'
+      },
+      {
+        userId: updatedUsers[1]._id,
+        teamId: teamByUserId.get(String(updatedUsers[1]._id)),
+        type: 'cycle',
+        durationMinutes: 48,
+        caloriesBurned: 610,
+        distanceKm: 18.5,
+        date: new Date('2026-08-11T18:00:00Z'),
+        notes: 'Hill repeats on the city loop.'
+      },
+      {
+        userId: updatedUsers[2]._id,
+        teamId: teamByUserId.get(String(updatedUsers[2]._id)),
+        type: 'strength',
+        durationMinutes: 35,
+        caloriesBurned: 340,
+        distanceKm: 0,
+        date: new Date('2026-08-12T07:00:00Z'),
+        notes: 'Full-body lift focused on lower body and core.'
+      },
+      {
+        userId: updatedUsers[3]._id,
+        teamId: teamByUserId.get(String(updatedUsers[3]._id)),
+        type: 'hike',
+        durationMinutes: 70,
+        caloriesBurned: 480,
+        distanceKm: 11.2,
+        date: new Date('2026-08-13T09:15:00Z'),
+        notes: 'Trail climb with a summit finish.'
+      }
+    ]);
+
+    const workoutDocs = await Workout.insertMany([
+      {
+        name: '5K Tempo Builder',
+        category: 'cardio',
+        durationMinutes: 35,
+        difficulty: 'intermediate',
+        focusAreas: ['endurance', 'speed', 'form'],
+        description: 'Alternating tempo intervals to improve pace control and stamina.'
+      },
+      {
+        name: 'Leg Day Strength Circuit',
+        category: 'strength',
+        durationMinutes: 40,
+        difficulty: 'advanced',
+        focusAreas: ['glutes', 'quads', 'core'],
+        description: 'Compound lifting set focused on power and stability.'
+      },
+      {
+        name: 'Recovery Mobility Flow',
+        category: 'mobility',
+        durationMinutes: 20,
+        difficulty: 'beginner',
+        focusAreas: ['hips', 'shoulders', 'mobility'],
+        description: 'Gentle stretching flow to improve range of motion.'
+      }
+    ]);
+
+    await LeaderboardEntry.insertMany([
+      {
+        userId: updatedUsers[0]._id,
+        teamId: teamByUserId.get(String(updatedUsers[0]._id)),
+        score: 980,
+        rank: 1,
+        streak: 12,
+        updatedAt: new Date()
+      },
+      {
+        userId: updatedUsers[1]._id,
+        teamId: teamByUserId.get(String(updatedUsers[1]._id)),
+        score: 940,
+        rank: 2,
+        streak: 9,
+        updatedAt: new Date()
+      },
+      {
+        userId: updatedUsers[2]._id,
+        teamId: teamByUserId.get(String(updatedUsers[2]._id)),
+        score: 860,
+        rank: 3,
+        streak: 5,
+        updatedAt: new Date()
+      },
+      {
+        userId: updatedUsers[3]._id,
+        teamId: teamByUserId.get(String(updatedUsers[3]._id)),
+        score: 905,
+        rank: 4,
+        streak: 7,
+        updatedAt: new Date()
+      }
+    ]);
+
+    console.log('Seeded users:', users.length);
+    console.log('Seeded teams:', teams.length);
+    console.log('Seeded activities:', activities.length);
+    console.log('Seeded workouts:', workoutDocs.length);
+    console.log('Seeded leaderboard entries:', 4);
     console.log('Database seeding complete');
     await mongoose.disconnect();
   } catch (error) {

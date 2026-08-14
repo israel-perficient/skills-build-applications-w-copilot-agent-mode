@@ -1,4 +1,6 @@
 import express, { Request, Response } from 'express';
+import mongoose from 'mongoose';
+import { Activity, LeaderboardEntry, Team, User, Workout } from './models';
 import { connectToDatabase } from './config/database';
 
 const app = express();
@@ -28,46 +30,91 @@ app.get('/', (_req: Request, res: Response) => {
 const createRouter = (resource: string) => {
   const router = express.Router();
 
-  router.get('/', (_req: Request, res: Response) => {
-    res.json({
-      resource,
-      message: `List all ${resource}`,
-      baseUrl: `${baseUrl}/api/${resource}/`
-    });
+  const modelMap: Record<string, mongoose.Model<any>> = {
+    users: User,
+    teams: Team,
+    activities: Activity,
+    leaderboard: LeaderboardEntry,
+    workouts: Workout
+  };
+
+  router.get('/', async (_req: Request, res: Response) => {
+    try {
+      const items = await modelMap[resource].find({}).lean();
+      res.json({
+        resource,
+        message: `List all ${resource}`,
+        count: items.length,
+        data: items,
+        baseUrl: `${baseUrl}/api/${resource}/`
+      });
+    } catch (error) {
+      res.status(500).json({ resource, error: 'Failed to fetch records' });
+    }
   });
 
-  router.get('/:id', (req: Request, res: Response) => {
-    res.json({
-      resource,
-      id: req.params.id,
-      message: `Get ${resource} by id`,
-      baseUrl: `${baseUrl}/api/${resource}/${req.params.id}`
-    });
+  router.get('/:id', async (req: Request, res: Response) => {
+    try {
+      const item = await modelMap[resource].findById(req.params.id).lean();
+      if (!item) {
+        return res.status(404).json({ resource, message: `${resource.slice(0, -1)} not found` });
+      }
+      return res.json({
+        resource,
+        id: req.params.id,
+        message: `Get ${resource} by id`,
+        data: item,
+        baseUrl: `${baseUrl}/api/${resource}/${req.params.id}`
+      });
+    } catch (error) {
+      return res.status(500).json({ resource, error: 'Failed to fetch record' });
+    }
   });
 
-  router.post('/', (req: Request, res: Response) => {
-    res.status(201).json({
-      resource,
-      message: `Create ${resource}`,
-      payload: req.body
-    });
+  router.post('/', async (req: Request, res: Response) => {
+    try {
+      const created = await modelMap[resource].create(req.body);
+      res.status(201).json({
+        resource,
+        message: `Create ${resource}`,
+        data: created
+      });
+    } catch (error) {
+      res.status(400).json({ resource, error: 'Failed to create record' });
+    }
   });
 
-  router.put('/:id', (req: Request, res: Response) => {
-    res.json({
-      resource,
-      id: req.params.id,
-      message: `Update ${resource}`,
-      payload: req.body
-    });
+  router.put('/:id', async (req: Request, res: Response) => {
+    try {
+      const updated = await modelMap[resource].findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+      if (!updated) {
+        return res.status(404).json({ resource, message: `${resource.slice(0, -1)} not found` });
+      }
+      return res.json({
+        resource,
+        id: req.params.id,
+        message: `Update ${resource}`,
+        data: updated
+      });
+    } catch (error) {
+      return res.status(400).json({ resource, error: 'Failed to update record' });
+    }
   });
 
-  router.delete('/:id', (req: Request, res: Response) => {
-    res.json({
-      resource,
-      id: req.params.id,
-      message: `Delete ${resource}`
-    });
+  router.delete('/:id', async (req: Request, res: Response) => {
+    try {
+      const deleted = await modelMap[resource].findByIdAndDelete(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ resource, message: `${resource.slice(0, -1)} not found` });
+      }
+      return res.json({
+        resource,
+        id: req.params.id,
+        message: `Delete ${resource}`
+      });
+    } catch (error) {
+      return res.status(500).json({ resource, error: 'Failed to delete record' });
+    }
   });
 
   return router;
