@@ -1,0 +1,63 @@
+.app-shell {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+}
+
+.app-header {
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+.navbar-brand {
+  letter-spacing: 0.04em;
+}
+
+.resource-card {
+  background: #ffffff;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 1rem;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.resource-card .card-title {
+  margin-bottom: 1rem;
+}
+
+.table td,
+.table th {
+  vertical-align: middle;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.empty-state {
+  border: 1px dashed #cbd5e1;
+  border-radius: 0.75rem;
+  padding: 2rem 1rem;
+  text-align: center;
+  color: #475569;
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.error-box {
+  border-left: 4px solid #dc2626;
+  background: #fef2f2;
+  color: #991b1b;
+  border-radius: 0.5rem;
+  padding: 0.9rem 1rem;
+}
+
+.loading-box {
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  color: #475569;
+}
