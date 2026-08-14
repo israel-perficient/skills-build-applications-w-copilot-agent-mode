@@ -5,9 +5,7 @@ import { connectToDatabase } from './config/database';
 
 const app = express();
 const PORT = 8000;
-
 app.use(express.json());
-
 const codespaceName = process.env.CODESPACE_NAME;
 const baseUrl = codespaceName
   ? `https://${codespaceName}-8000.app.github.dev`
