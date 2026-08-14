@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react'
 import { fetchResource, normalizeResourceData } from './api'
 
+const activitiesApiUrl = import.meta.env.VITE_CODESPACE_NAME
+  ? `https://${import.meta.env.VITE_CODESPACE_NAME}-8000.app.github.dev/api/activities/`
+  : 'http://localhost:8000/api/activities/'
+
 function formatDate(value) {
   if (!value) {
     return '—'

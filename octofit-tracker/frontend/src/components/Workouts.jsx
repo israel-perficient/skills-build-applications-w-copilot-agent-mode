@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react'
 import { fetchResource, normalizeResourceData } from './api'
 
+const workoutsApiUrl = import.meta.env.VITE_CODESPACE_NAME
+  ? `https://${import.meta.env.VITE_CODESPACE_NAME}-8000.app.github.dev/api/workouts/`
+  : 'http://localhost:8000/api/workouts/'
+
 function Workouts() {
   const [items, setItems] = useState([])
   const [count, setCount] = useState(0)

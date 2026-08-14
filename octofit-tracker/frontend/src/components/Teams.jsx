@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react'
 import { fetchResource, normalizeResourceData } from './api'
 
+const teamsApiUrl = import.meta.env.VITE_CODESPACE_NAME
+  ? `https://${import.meta.env.VITE_CODESPACE_NAME}-8000.app.github.dev/api/teams/`
+  : 'http://localhost:8000/api/teams/'
+
 function Teams() {
   const [items, setItems] = useState([])
   const [count, setCount] = useState(0)

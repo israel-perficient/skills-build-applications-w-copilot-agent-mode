@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react'
 import { fetchResource, normalizeResourceData } from './api'
 
+const leaderboardApiUrl = import.meta.env.VITE_CODESPACE_NAME
+  ? `https://${import.meta.env.VITE_CODESPACE_NAME}-8000.app.github.dev/api/leaderboard/`
+  : 'http://localhost:8000/api/leaderboard/'
+
 function Leaderboard() {
   const [items, setItems] = useState([])
   const [count, setCount] = useState(0)
